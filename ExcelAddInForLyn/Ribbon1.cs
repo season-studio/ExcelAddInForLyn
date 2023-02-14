@@ -67,130 +67,129 @@ namespace ExcelAddInForLyn
         {
             const int MaxContinuedEmptyCount = 100;
 
-            if (Globals.ThisAddIn.Application.Selection is Range range)
+            try
             {
-                if (range.Areas.Count > 1)
+                if (Globals.ThisAddIn.Application.Selection is Range range)
                 {
-                    MessageBox.Show("不支持多个不连续区间的选择", Globals.ThisAddIn.Title, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-
-                var startAddress = range[1,1].Address; ;
-                var endAddress = range.SpecialCells(XlCellType.xlCellTypeLastCell).Address;
-
-                range = (Globals.ThisAddIn.Application.ActiveSheet as Worksheet).Range[$"{startAddress}:{endAddress}"];
-
-                int rowsCount = range.Rows.Count, colsCount = range.Columns.Count;
-                if ((rowsCount < 2) || (colsCount < 2))
-                {
-                    MessageBox.Show("没有选择足够的数据。", Globals.ThisAddIn.Title, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-
-                int seriesIdx = 0, dataIdx = 0;
-                Func<string> fnGetData;
-                Func<bool> fnStepAndCheckSeries;
-                Func<bool> fnStepAndCheckData;
-                Func<string> fnGetScheduleDate;
-                Func<string> fnGetDataAddress;
-                if (_hortizontal)
-                {
-                    fnGetData = () => range.Cells[seriesIdx, dataIdx].Text;
-                    fnStepAndCheckSeries = () => (++seriesIdx) <= rowsCount;
-                    fnStepAndCheckData = () => (++dataIdx) <= colsCount;
-                    fnGetScheduleDate = () => range.Cells[1, dataIdx].Text;
-                    fnGetDataAddress = () => (range.Cells[seriesIdx, dataIdx] as Range).Address;
-                }
-                else
-                {
-                    fnGetData = () => range.Cells[dataIdx, seriesIdx].Text;
-                    fnStepAndCheckSeries = () => (++seriesIdx) <= colsCount;
-                    fnStepAndCheckData = () => (++dataIdx) <= rowsCount;
-                    fnGetScheduleDate = () => range.Cells[dataIdx, 1].Text;
-                    fnGetDataAddress = () => (range.Cells[dataIdx, seriesIdx] as Range).Address;
-                }
-
-                List<string[]> allSchedules = new List<string[]>();
-                List<string> itemSchedules = new List<string>();
-                int emptyCount = 0;
-                seriesIdx = 2;
-                do
-                {
-                    dataIdx = 1;
-                    string seriesName = fnGetData();
-                    if (string.IsNullOrWhiteSpace(seriesName))
+                    if (range.Areas.Count > 1)
                     {
-                        if (++emptyCount >= MaxContinuedEmptyCount)
-                        {
-                            break;
-                        }
+                        MessageBox.Show("不支持多个不连续区间的选择", Globals.ThisAddIn.Title, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+
+                    var startAddress = range[1, 1].Address; ;
+                    // var endAddress = range.SpecialCells(XlCellType.xlCellTypeLastCell).Address;
+                    // range = (Globals.ThisAddIn.Application.ActiveSheet as Worksheet).Range[$"{startAddress}:{endAddress}"];
+
+                    int rowsCount = range.Rows.Count, colsCount = range.Columns.Count;
+                    if ((rowsCount < 2) || (colsCount < 2))
+                    {
+                        MessageBox.Show("没有选择足够的数据。", Globals.ThisAddIn.Title, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+
+                    int seriesIdx = 0, dataIdx = 0;
+                    Func<string> fnGetData;
+                    Func<bool> fnStepAndCheckSeries;
+                    Func<bool> fnStepAndCheckData;
+                    Func<string> fnGetScheduleDate;
+                    Func<string> fnGetDataAddress;
+                    if (_hortizontal)
+                    {
+                        fnGetData = () => range.Cells[seriesIdx, dataIdx].Text;
+                        fnStepAndCheckSeries = () => (++seriesIdx) <= rowsCount;
+                        fnStepAndCheckData = () => (++dataIdx) <= colsCount;
+                        fnGetScheduleDate = () => range.Cells[1, dataIdx].Text;
+                        fnGetDataAddress = () => (range.Cells[seriesIdx, dataIdx] as Range).Address;
                     }
                     else
                     {
-                        emptyCount = 0;
-                        itemSchedules.Clear();
-                        while (fnStepAndCheckData())
-                        {
-                            string val = fnGetData();
-                            endAddress = fnGetDataAddress();
-                            if (!string.IsNullOrWhiteSpace(val))
-                            {
-                                itemSchedules.Add(string.Join("\x1B", fnGetScheduleDate(), val));
-                            }
-                        }
-                        if (itemSchedules.Count > 0)
-                        {
-                            allSchedules.Add(itemSchedules.Prepend(seriesName).ToArray());
-                        }
+                        fnGetData = () => range.Cells[dataIdx, seriesIdx].Text;
+                        fnStepAndCheckSeries = () => (++seriesIdx) <= colsCount;
+                        fnStepAndCheckData = () => (++dataIdx) <= rowsCount;
+                        fnGetScheduleDate = () => range.Cells[dataIdx, 1].Text;
+                        fnGetDataAddress = () => (range.Cells[dataIdx, seriesIdx] as Range).Address;
                     }
-                } while (fnStepAndCheckSeries());
 
-                var newSheet = Globals.ThisAddIn.Application.ActiveWorkbook.Sheets.Add() as Worksheet;
-                if (null != newSheet)
-                { 
-                    var newRange = newSheet.Range[$"A1:C1"];
-                    newRange[1, 1] = $"数据源范围{startAddress}:{endAddress}";
-                    newRange[1, 2] = "排期时间";
-                    newRange[1, 3] = "数量";
-                    newRange = newRange.Offset[1, 0];
-                    foreach (var seriesRecords in allSchedules)
+                    List<string[]> allSchedules = new List<string[]>();
+                    List<string> itemSchedules = new List<string>();
+                    var endAddress = startAddress;
+                    int emptyCount = 0;
+                    seriesIdx = 2;
+                    do
                     {
-                        if (seriesRecords.Length > 1)
+                        dataIdx = 1;
+                        string seriesName = fnGetData();
+                        if (string.IsNullOrWhiteSpace(seriesName))
                         {
-                            var seriesName = seriesRecords[0];
-                            for (int vIdx = 1; vIdx < seriesRecords.Length; vIdx++)
+                            if (++emptyCount >= MaxContinuedEmptyCount)
                             {
-                                newRange[1, 1] = seriesName;
-                                var values = seriesRecords[vIdx].Split('\x1B');
-                                newRange[1, 2] = values[0];
-                                if (!string.IsNullOrWhiteSpace(values[1]))
-                                {
-                                    newRange[1, 3] = values[1];
-                                }
-                                newRange = newRange.Offset[1, 0];
+                                break;
                             }
                         }
+                        else
+                        {
+                            emptyCount = 0;
+                            itemSchedules.Clear();
+                            while (fnStepAndCheckData())
+                            {
+                                string val = fnGetData();
+                                endAddress = fnGetDataAddress();
+                                if (!string.IsNullOrWhiteSpace(val))
+                                {
+                                    itemSchedules.Add(string.Join("\x1B", fnGetScheduleDate(), val));
+                                }
+                            }
+                            if (itemSchedules.Count > 0)
+                            {
+                                allSchedules.Add(itemSchedules.Prepend(seriesName).ToArray());
+                            }
+                        }
+                    } while (fnStepAndCheckSeries());
+
+                    var newSheet = Globals.ThisAddIn.Application.ActiveWorkbook.Sheets.Add() as Worksheet;
+                    if (null != newSheet)
+                    {
+                        var newRange = newSheet.Range[$"A1:C1"];
+                        newRange[1, 1] = $"数据源范围{startAddress}:{endAddress}";
+                        newRange[1, 2] = "排期时间";
+                        newRange[1, 3] = "数量";
+                        newRange = newRange.Offset[1, 0];
+                        foreach (var seriesRecords in allSchedules)
+                        {
+                            if (seriesRecords.Length > 1)
+                            {
+                                var seriesName = seriesRecords[0];
+                                for (int vIdx = 1; vIdx < seriesRecords.Length; vIdx++)
+                                {
+                                    newRange[1, 1] = seriesName;
+                                    var values = seriesRecords[vIdx].Split('\x1B');
+                                    newRange[1, 2] = values[0];
+                                    if (!string.IsNullOrWhiteSpace(values[1]))
+                                    {
+                                        newRange[1, 3] = values[1];
+                                    }
+                                    newRange = newRange.Offset[1, 0];
+                                }
+                            }
+                        }
+
+                        newSheet.Name = $"抽取结果({DateTime.Now.ToString("yy-MM-dd HH.mm.ss.fff")})";
+                        newSheet.Activate();
                     }
 
-                    var tmpRange = newSheet.Range[$"A1:C1"];
-                    Trace.WriteLine($"{tmpRange.Address}");
-                    var tmpRange1 = tmpRange.Offset[1, 0];
-                    Trace.WriteLine($"{tmpRange1.Address}");
-
-
-                    tmpRange = range.SpecialCells(XlCellType.xlCellTypeLastCell);
-                    Trace.WriteLine($"{tmpRange.Address}, {range[1,1].Address}");
-
-                    newSheet.Name = $"抽取结果({DateTime.Now.ToString("yy-MM-dd HH.mm.ss.fff")})";
-                    newSheet.Activate();
+                    MessageBox.Show($"数据处理完成。{Environment.NewLine}有效的源数据区间是{startAddress}:{endAddress}。{Environment.NewLine}建议检查一下有效数据是否与选择匹配。", Globals.ThisAddIn.Title, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    // MessageBox.Show(string.Join(Environment.NewLine, allSchedules.Select(e => $"[{string.Join(", ", e)}]")));
                 }
-
-                MessageBox.Show($"数据处理完成。{Environment.NewLine}有效的源数据区间是{startAddress}:{endAddress}。{Environment.NewLine}建议检查一下有效数据是否与选择匹配。", Globals.ThisAddIn.Title, MessageBoxButtons.OK, MessageBoxIcon.Information);
-                // MessageBox.Show(string.Join(Environment.NewLine, allSchedules.Select(e => $"[{string.Join(", ", e)}]")));
+                else
+                {
+                    MessageBox.Show("需要选择源数据区间", Globals.ThisAddIn.Title, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
-            else
+            catch (Exception err)
             {
-                MessageBox.Show("需要选择源数据区间", Globals.ThisAddIn.Title, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Trace.TraceError(err.ToString());
+                MessageBox.Show($"出现错误。{Environment.NewLine}{err.Message}", Globals.ThisAddIn.Title, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

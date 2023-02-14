@@ -33,7 +33,7 @@
     <PublishUrl>D:\.Project\ExcelAddInForLyn\.dist\</PublishUrl>
     <InstallUrl />
     <TargetCulture>zh-chs</TargetCulture>
-    <ApplicationVersion>1.0.1.5</ApplicationVersion>
+    <ApplicationVersion>1.0.1.6</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
