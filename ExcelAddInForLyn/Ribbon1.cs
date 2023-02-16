@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 using Office = Microsoft.Office.Core;
 
 // TODO:   按照以下步骤启用功能区(XML)项:
@@ -37,6 +38,7 @@ namespace ExcelAddInForLyn
     public class Ribbon1 : Office.IRibbonExtensibility
     {
         private Office.IRibbonUI ribbon;
+        private Spotlight Spotlight;
 
         public Ribbon1()
         {
@@ -57,6 +59,7 @@ namespace ExcelAddInForLyn
         public void Ribbon_Load(Office.IRibbonUI ribbonUI)
         {
             this.ribbon = ribbonUI;
+            Spotlight = new Spotlight();
         }
 
         #endregion
@@ -202,6 +205,27 @@ namespace ExcelAddInForLyn
         {
             DoPickSchedule(false);
         }
+
+        public bool OnQuerySpotlight(IRibbonControl _)
+        {
+            return Spotlight.Enable;
+        }
+
+        public void OnSetSpotlight(IRibbonControl _, bool _pressed)
+        {
+            Spotlight.Enable = _pressed;
+        }
+
+        public void OnSetSpotlightColor(IRibbonControl _)
+        {
+            var clrDlg = new ColorDialog();
+            clrDlg.Color = Spotlight.Color;
+            if (clrDlg.ShowDialog() == DialogResult.OK)
+            {
+                Spotlight.Color = clrDlg.Color;
+            }
+        }
+
         #endregion
 
         #region 帮助器

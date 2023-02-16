@@ -1,16 +1,22 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" onLoad="Ribbon_Load">
-  <ribbon>
-    <tabs>
-      <tab id="ExcelAddinForLyn" label="小琳子的插件">
-        <group id="Convert" label="转换">
-			<menu id="btnPickProductSchedule" label="提取排期">
-				<button id="btnPickProductScheduleHorizontal" label="源数据横向" onAction="OnPickProductScheduleHorizontal" />
-				<button id="btnPickProductScheduleVertical" label="源数据纵向" onAction="OnPickProductScheduleVeritcal" />
-			</menu>
-		</group>
-      </tab>
-    </tabs>
-  </ribbon>
+	<ribbon>
+		<tabs>
+			<tab id="ExcelAddinForLyn" label="小琳子的插件">
+				<group id="groupConvert" label="转换">
+					<menu id="btnPickProductSchedule" label="提取排期">
+						<button id="btnPickProductScheduleHorizontal" label="源数据横向" onAction="OnPickProductScheduleHorizontal" />
+						<button id="btnPickProductScheduleVertical" label="源数据纵向" onAction="OnPickProductScheduleVeritcal" />
+					</menu>
+				</group>
+				<group id="groupVisual" label="可视化">
+					<box id="boxSpotlight" boxStyle="vertical">
+						<checkBox id="chkSpotlight" label="聚光灯" getPressed="OnQuerySpotlight" onAction="OnSetSpotlight" />
+						<button id="btnSetSpotlightColor" label="聚光颜色" onAction="OnSetSpotlightColor" />
+					</box>
+				</group>
+			</tab>
+		</tabs>
+	</ribbon>
 </customUI>
 
